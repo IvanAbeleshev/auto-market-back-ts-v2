@@ -4,6 +4,7 @@ import 'dotenv/config'
 import {SequelizeInstance} from './db'
 import mainRouter from './routes/main'
 import fileUpload from 'express-fileupload'
+import path from 'path'
 
 const portApplication = process.env.PORT || 7000
 
@@ -11,6 +12,7 @@ const server: express.Application = express()
 server.use(express.json())
 server.use(cors())
 server.use(fileUpload())
+server.use(express.static(path.resolve(__dirname, 'static')))
 server.use('/api', mainRouter)
 
 const startServer = async() =>{

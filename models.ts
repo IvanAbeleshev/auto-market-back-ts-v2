@@ -69,6 +69,11 @@ const remainderProduct = SequelizeInstance.define('remainderProduct', {
         type: DataType.INTEGER,
         primaryKey: true,
         autoIncrement: true
+    },
+
+    remainder:{
+        type: DataType.FLOAT,
+        defaultValue: 0
     }
 })
 

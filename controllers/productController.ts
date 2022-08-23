@@ -35,16 +35,21 @@ interface IRequestCreate extends Request{
     body: IProduct
 }
 
-interface IRequestAddImage extends Request{
-    body:{
-        productId: number
-    }
+interface IDataRemainder{
+    productId: number, 
+    remainder: number
 }
 
 interface IRequestUpdateRemainder extends Request{
     body:{
-        data: {productId: string, remainder: number}[]
+        data: IDataRemainder[]
     }    
+}
+
+
+
+interface IRequestUpdateRemainderProduct extends IRequestGetOne{
+    body: IDataRemainder
 }
 
 //======================================
@@ -67,6 +72,14 @@ const addImgsNameToDbTable = (arrayNames: string[] | void[], productId:number): 
     }    
 }
 
+const updateOrCreateRemainder = async(productId: number, dataItem:IDataRemainder) =>{
+    const findedElement = await remainderProduct.findOne({where: {productId}})    
+    if(findedElement){
+        await findedElement.update(dataItem)
+    }else{
+        await remainderProduct.create({...dataItem})
+    }
+}
 //======================================
 // class-controller
 export default class ProductController{
@@ -105,27 +118,25 @@ export default class ProductController{
         return res.json(item)
     }
 
-    public static addImg = (req: IRequestAddImage, res: Response)=>{
+    public static addImg = (req: IRequestGetOne, res: Response)=>{
         const arrayFilesName = renameAndMoveFileImg(req.files)
-        addImgsNameToDbTable(arrayFilesName, req.body.productId)
+        addImgsNameToDbTable(arrayFilesName, Number(req.params.id))
 
         res.json({imgNames: arrayFilesName})
     }
 
     public static updateRemainder = async(req: IRequestUpdateRemainder, res: Response) => {
         const incomingArray = req.body.data;
-        console.log('incomingArray',incomingArray)
         for(let item in incomingArray){
-            console.log('element of array',incomingArray[item])
-            const findedElement = await remainderProduct.findOne({where: {productId: incomingArray[item].productId}})    
-            if(findedElement){
-                await findedElement.update(incomingArray[item])
-            }else{
-                await remainderProduct.create(incomingArray[item])
-            }
+            updateOrCreateRemainder(incomingArray[item].productId, incomingArray[item])
         }
         
         //need add check for update or use try/catch
+        res.json({status: true, message: 'remainder product is update'})
+    }
+
+    public static updateRemainderProduct = async(req: IRequestUpdateRemainderProduct, res: Response) =>{
+        updateOrCreateRemainder(Number(req.params.id), {productId: req.body.productId, remainder: req.body.productId})
         res.json({status: true, message: 'remainder product is update'})
     }
 }

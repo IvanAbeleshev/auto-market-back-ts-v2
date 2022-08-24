@@ -9,7 +9,8 @@ const user = SequelizeInstance.define('user', {
     },
     email:{
         type: DataType.STRING,
-        unique: true
+        unique: true,
+        allowNull: false
     },
     phone:{
         type: DataType.STRING,
@@ -17,6 +18,7 @@ const user = SequelizeInstance.define('user', {
     },
     password: {
         type: DataType.STRING,
+        allowNull: false
     },
     role: {
         type: DataType.STRING,

@@ -1,3 +1,5 @@
+import { myJwtPayload } from "./exportsIterfaces"
+
 export{}
 
 declare global{
@@ -7,8 +9,13 @@ declare global{
         DB_USER: string,
         DB_PASSWORD: string,
         DB_HOST: string,
-        DB_PORT: number
+        DB_PORT: number,
+        SECRET_KEY: string
+    }
+  }
+  namespace Express {
+    interface Request {
+       user?: myJwtPayload
     }
   }
 }
-

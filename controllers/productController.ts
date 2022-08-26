@@ -1,8 +1,10 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import {imageProduct, product, remainderProduct} from '../models'
 import {v4} from 'uuid'
 import fileUpload, { FileArray, UploadedFile } from 'express-fileupload'
 import path from 'path'
+import { SequelizeInstance } from '../db'
+import { Sequelize } from 'sequelize/types'
 
 //======================================
 //interfaces
@@ -45,8 +47,6 @@ interface IRequestUpdateRemainder extends Request{
         data: IDataRemainder[]
     }    
 }
-
-
 
 interface IRequestUpdateRemainderProduct extends IRequestGetOne{
     body: IDataRemainder
@@ -113,7 +113,11 @@ export default class ProductController{
         return res.json(productList)
     }
 
-    public static getOne = async(req: IRequestGetOne, res: Response)=>{
+    public static getOne = async(req: IRequestGetOne, res: Response, next: NextFunction)=>{
+        //check for nex route
+        // if(req.params.id==='mostPopular'){
+        //     return next()
+        // }
         const item = await product.findOne({where:{id: req.params.id}})
         return res.json(item)
     }
@@ -138,6 +142,26 @@ export default class ProductController{
     public static updateRemainderProduct = async(req: IRequestUpdateRemainderProduct, res: Response) =>{
         updateOrCreateRemainder(Number(req.params.id), {productId: req.body.productId, remainder: req.body.productId})
         res.json({status: true, message: 'remainder product is update'})
+    }
+
+    public static getMostPopularProductByTypes = async(_:Request, res:Response) => {
+        //temp query
+        const query=`
+        SELECT 
+            "orderProducts"."id",
+            "orderProducts"."count" as countProduct,
+            "orderProducts"."sum" as sumProduct,
+            "orderProducts"."productId" as productid,
+            "orderProducts"."orderId",
+            "products"."name" as nameProduct,
+            "products"."typesProductId" as idTypes
+        FROM "orderProducts", "products"
+        where "orderProducts"."productId" = "products".id
+        `;
+              
+        const [results] = await SequelizeInstance.query(query);
+        
+        return res.json({results});    
     }
 }
 

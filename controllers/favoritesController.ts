@@ -18,16 +18,11 @@ export default class FavoritesController{
         }
         const userId = req.user.id
 
-        const [item, created] = await favoriteUserProduct.findOrCreate({
-            where: { productId: req.body.productId, userId },
-            defaults: {
-                productId: req.body.productId,
-                userId
-            }
-          });
+        const findedProduct = await favoriteUserProduct.findOne({where: { productId: req.body.productId, userId }});
         
-        if(created){
-            res.json(item)
+        if(!findedProduct){
+            const newRecord = await favoriteUserProduct.create({ productId: req.body.productId, userId })
+            res.json({newRecord})
         }
 
         //need create universal format response!!!

@@ -1,4 +1,4 @@
-import { DataType } from 'sequelize-typescript'
+import { AllowNull, DataType } from 'sequelize-typescript'
 import { SequelizeInstance } from './db'
 
 const user = SequelizeInstance.define('user', {
@@ -123,6 +123,29 @@ const product = SequelizeInstance.define('product',{
 
 })
 
+const order = SequelizeInstance.define('order', {
+    id:{
+        type: DataType.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    }
+})
+
+const orderProducts = SequelizeInstance.define('orderProducts', {
+    id:{
+        type: DataType.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },    
+    count:{
+        type: DataType.FLOAT,
+        allowNull: false
+    },
+    sum:{
+        type: DataType.FLOAT,
+        allowNull: false
+    }
+})
 
 // set relationship between tables db
 product.hasMany(imageProduct)
@@ -146,7 +169,16 @@ basketUser.belongsTo(user)
 user.hasOne(favoriteUserProduct)
 favoriteUserProduct.belongsTo(user)
 
-export {user, typesProduct, remainderProduct, favoriteUserProduct, basketUser, product, imageProduct}
+user.hasOne(order)
+order.belongsTo(user)
+
+order.hasMany(orderProducts)
+orderProducts.belongsTo(order)
+
+product.hasMany(orderProducts)
+orderProducts.belongsTo(product)
+
+export {user, typesProduct, remainderProduct, favoriteUserProduct, basketUser, product, imageProduct, order, orderProducts}
 
 
 

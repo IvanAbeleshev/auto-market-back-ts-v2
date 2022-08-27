@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import createAnswer from "../common/createAnswear";
 import { order, orderProducts } from "../models";
 
 //======================================
@@ -23,6 +24,6 @@ export default class OrderController{
             await orderProducts.create({...req.body.dataProducts[index], orderId: itemOrder.getDataValue('id')})
         }
 
-        return res.json({itemOrder})
+        return createAnswer(res, 200, false, 'ok', itemOrder)
     }
 }

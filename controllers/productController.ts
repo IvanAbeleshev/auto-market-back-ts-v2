@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
 import {imageProduct, product, remainderProduct} from '../models'
 import {v4} from 'uuid'
-import fileUpload, { FileArray, UploadedFile } from 'express-fileupload'
+import fileUpload, { UploadedFile } from 'express-fileupload'
 import path from 'path'
 import { SequelizeInstance } from '../db'
-import { Sequelize } from 'sequelize/types'
+import createAnswer from '../common/createAnswear'
 
 //======================================
 //interfaces
@@ -94,7 +94,7 @@ export default class ProductController{
         //add img to table
         addImgsNameToDbTable(arrayFilesName, itemProduct.getDataValue('id'))
 
-        res.json({...itemProduct, imgNames: arrayFilesName})
+        return createAnswer(res, 200, false, 'Product added to base', {...itemProduct, imgNames: arrayFilesName})
     }
 
     public static getAll = async(req: IRequestGetAll, res:Response)=>{
@@ -110,23 +110,19 @@ export default class ProductController{
 
         productList = await product.findAndCountAll({limit, offset})
 
-        return res.json(productList)
+        return createAnswer(res, 200, false, 'Take actual product list', productList)
     }
 
     public static getOne = async(req: IRequestGetOne, res: Response, next: NextFunction)=>{
-        //check for nex route
-        // if(req.params.id==='mostPopular'){
-        //     return next()
-        // }
         const item = await product.findOne({where:{id: req.params.id}})
-        return res.json(item)
+        return createAnswer(res, 200, false, `Take data roduct with id: ${req.params.id}`, <Object>item)
     }
 
     public static addImg = (req: IRequestGetOne, res: Response)=>{
         const arrayFilesName = renameAndMoveFileImg(req.files)
         addImgsNameToDbTable(arrayFilesName, Number(req.params.id))
 
-        res.json({imgNames: arrayFilesName})
+        return createAnswer(res, 200, false, `Images added to product with id: ${req.params.id}`, arrayFilesName)
     }
 
     public static updateRemainder = async(req: IRequestUpdateRemainder, res: Response) => {
@@ -135,13 +131,12 @@ export default class ProductController{
             updateOrCreateRemainder(incomingArray[item].productId, incomingArray[item])
         }
         
-        //need add check for update or use try/catch
-        res.json({status: true, message: 'remainder product is update'})
+        return createAnswer(res, 200, false, 'Remainder product is updated')
     }
 
     public static updateRemainderProduct = async(req: IRequestUpdateRemainderProduct, res: Response) =>{
         updateOrCreateRemainder(Number(req.params.id), {productId: req.body.productId, remainder: req.body.productId})
-        res.json({status: true, message: 'remainder product is update'})
+        return createAnswer(res, 200, false, 'Remainder product is update')
     }
 
     public static getMostPopularProductByTypes = async(_:Request, res:Response) => {
@@ -157,11 +152,11 @@ export default class ProductController{
             "products"."typesProductId" as idTypes
         FROM "orderProducts", "products"
         where "orderProducts"."productId" = "products".id
-        `;
+        `
               
         const [results] = await SequelizeInstance.query(query);
         
-        return res.json({results});    
+        return createAnswer(res, 200, false, 'Take most popular product list', results)
     }
 }
 

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import createAnswer from '../common/createAnswear'
 import { favoriteUserProduct } from '../models'
 
 //======================================
@@ -14,24 +15,26 @@ interface IRequestAddOrRemoveProductOfFavorites extends Request{
 export default class FavoritesController{
     public static addProductToFavorites = async(req: IRequestAddOrRemoveProductOfFavorites, res: Response) => {
         if(!req.user){
-            return res.json({message: 'user is unlogin'})
+            return createAnswer(res, 403, true, 'user is unlogin')
         }
         const userId = req.user.id
 
+        console.log('userId', userId);
+        console.log('productId', req.body.productId);
+        
         const findedProduct = await favoriteUserProduct.findOne({where: { productId: req.body.productId, userId }});
         
         if(!findedProduct){
             const newRecord = await favoriteUserProduct.create({ productId: req.body.productId, userId })
-            res.json({newRecord})
+            return createAnswer(res, 200, false, 'ok', newRecord)
         }
 
-        //need create universal format response!!!
-        res.json({message:'product cant added to favorites'})
+        return createAnswer(res, 200, false, 'product already added to favorite')
     }
 
     public static removeProductFromFavorites = async(req: IRequestAddOrRemoveProductOfFavorites, res: Response)=>{
         if(!req.user){
-            return res.json({message: 'user is unlogin'})
+            return createAnswer(res, 403, true, 'user is unlogin')
         }
         const userId = req.user.id
 
@@ -40,7 +43,7 @@ export default class FavoritesController{
             productId: req.body.productId
         }})
 
-        res.json({message: 'product had removed from favorites user'})
+        return createAnswer(res, 200, false, 'product is removed from favorites')
     }
 
 }

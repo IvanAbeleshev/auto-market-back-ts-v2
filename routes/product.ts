@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import ProductController from '../controllers/productController'
+import { checkRole } from '../middlewars/checkRole'
 
 const productRouter = Router()
 
@@ -9,10 +10,10 @@ productRouter.get('/mostPopular/', ProductController.getMostPopularProductByType
 productRouter.get('/:id', ProductController.getOne)
 
 //post methods
-productRouter.post('/', ProductController.create)
-productRouter.post('/:id/addImg', ProductController.addImg)
-productRouter.post('/:id/updateRemainder', ProductController.updateRemainderProduct)
-productRouter.post('/updateRemainder', ProductController.updateRemainder)
+productRouter.post('/',  checkRole, ProductController.create)
+productRouter.post('/:id/addImg', checkRole, ProductController.addImg)
+productRouter.post('/:id/updateRemainder', checkRole, ProductController.updateRemainderProduct)
+productRouter.post('/updateRemainder', checkRole, ProductController.updateRemainder)
 
 
 export default productRouter

@@ -1,4 +1,4 @@
-import { myJwtPayload } from "./exportsIterfaces"
+import { myJwtPayload } from "./exportsInterfaces"
 
 export{}
 

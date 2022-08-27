@@ -1,5 +1,6 @@
 import { typesProduct } from "../models"
 import { Request, Response } from 'express'
+import createAnswer from "../common/createAnswear"
 
 interface IRequestCreate extends Request{
     body:{
@@ -11,11 +12,12 @@ interface IRequestCreate extends Request{
 export default class TypesProductController{
     public static create = async(req: IRequestCreate, res: Response) =>{
         const itemTypes = await typesProduct.create({...req.body})
-        res.json(itemTypes)
+        return createAnswer(res, 200, false, 'ok', itemTypes)
     }
 
     public static getAll = async(req: Request, res: Response) =>{
         const arrayTypesProduct = await typesProduct.findAll()
-        res.json(arrayTypesProduct)
+        
+        return createAnswer(res, 200, false, 'ok', arrayTypesProduct)
     }
 }

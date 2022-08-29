@@ -5,6 +5,7 @@ import {SequelizeInstance} from './db'
 import mainRouter from './routes/main'
 import fileUpload from 'express-fileupload'
 import path from 'path'
+import errorMiddleware from './middlewars/errorMiddleware'
 
 const portApplication = process.env.PORT || 7000
 
@@ -14,6 +15,9 @@ server.use(cors())
 server.use(fileUpload())
 server.use(express.static(path.resolve(__dirname, 'static')))
 server.use('/api', mainRouter)
+
+//error middleware
+server.use(errorMiddleware)
 
 const startServer = async() =>{
     let countTry = 5;

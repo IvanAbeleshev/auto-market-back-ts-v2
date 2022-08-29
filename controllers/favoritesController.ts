@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { Joi } from 'express-validation';
 import createAnswer from '../common/createAnswear'
 import { favoriteUserProduct } from '../models'
 
@@ -13,16 +14,18 @@ interface IRequestAddOrRemoveProductOfFavorites extends Request{
 //======================================
 // class-controller
 export default class FavoritesController{
+    public static VIRequestAddOrRemoveProductOfFavorites = {
+        body: Joi.object({
+            productId: Joi.number()    
+        })
+    };
     public static addProductToFavorites = async(req: IRequestAddOrRemoveProductOfFavorites, res: Response) => {
         if(!req.user){
             return createAnswer(res, 403, true, 'user is unlogin')
         }
         const userId = req.user.id
-
-        console.log('userId', userId);
-        console.log('productId', req.body.productId);
         
-        const findedProduct = await favoriteUserProduct.findOne({where: { productId: req.body.productId, userId }});
+        const findedProduct = await favoriteUserProduct.findOne({where: { productId: req.body.productId, userId }})
         
         if(!findedProduct){
             const newRecord = await favoriteUserProduct.create({ productId: req.body.productId, userId })

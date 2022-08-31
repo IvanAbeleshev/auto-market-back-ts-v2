@@ -5,6 +5,7 @@ import fileUpload, { UploadedFile } from 'express-fileupload'
 import path from 'path'
 import { SequelizeInstance } from '../db'
 import createAnswer from '../common/createAnswear'
+import { Joi } from 'express-validation'
 
 //======================================
 //interfaces
@@ -83,6 +84,57 @@ const updateOrCreateRemainder = async(productId: number, dataItem:IDataRemainder
 //======================================
 // class-controller
 export default class ProductController{
+    //object for validate request
+    public static VIRequestGetAll = {
+        query: Joi.object({
+            typeId: Joi.string(),
+            limit: Joi.string(),
+            page: Joi.string(),
+        })
+    }
+
+    public static VIRequestGetOne = {
+        params: Joi.object({
+            id: Joi.number().required()
+        })
+    }
+
+    public static VIRequestCreate = {
+        body: Joi.object({
+            id: Joi.number(),
+            typesProductId: Joi.number().required(),
+            guid: Joi.string().required(),
+            name: Joi.string().required(),
+            fullName: Joi.string(),
+            actualPrice: Joi.number().required(),
+            oldPrice: Joi.number(),
+            mainNameImg: Joi.string() 
+        })
+    }
+
+    public static VIRequestUpdateRemainderProduct = {
+        params: Joi.object({
+            id: Joi.number().required()
+        }),
+        body: Joi.object({
+            productId: Joi.number().required(), 
+            remainder: Joi.number().required()
+        })
+    }
+
+    public static VIRequestUpdateRemainder = {
+        params: Joi.object({
+            id: Joi.number().required()
+        }),
+        body: Joi.object({
+            data: Joi.array().items({
+                productId: Joi.number().required(), 
+                remainder: Joi.number().required()
+            })
+            
+        })
+    }
+    //functions
     public static create = async(req: IRequestCreate, res:Response) =>{
         
         const arrayFilesName = renameAndMoveFileImg(req.files)
@@ -106,16 +158,16 @@ export default class ProductController{
 
         if(req.query.typeId){
             productList = await product.findAndCountAll({where: {typesProductId: req.query.typeId}, limit, offset})
+        }else{
+            productList = await product.findAndCountAll({limit, offset})
         }
-
-        productList = await product.findAndCountAll({limit, offset})
 
         return createAnswer(res, 200, false, 'Take actual product list', productList)
     }
 
     public static getOne = async(req: IRequestGetOne, res: Response, next: NextFunction)=>{
         const item = await product.findOne({where:{id: req.params.id}})
-        return createAnswer(res, 200, false, `Take data roduct with id: ${req.params.id}`, <Object>item)
+        return createAnswer(res, 200, false, `Take data product with id: ${req.params.id}`, <Object>item)
     }
 
     public static addImg = (req: IRequestGetOne, res: Response)=>{

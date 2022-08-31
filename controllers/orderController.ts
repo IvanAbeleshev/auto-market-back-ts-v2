@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Joi } from "express-validation";
 import createAnswer from "../common/createAnswear";
 import { order, orderProducts } from "../models";
 
@@ -18,6 +19,17 @@ interface IRequestOrder extends Request{
 //======================================
 // class-controller
 export default class OrderController{
+    public static VIRequestOrder = {
+        body: Joi.object({
+            userid: Joi.number().required(),
+            dataProducts: Joi.object({
+                count: Joi.number().required(),
+                sum: Joi.number().required(),
+                productId: Joi.number().required()
+            })
+        })
+    };
+
     public static createOrder = async(req: IRequestOrder, res: Response) =>{
         const itemOrder = await order.create({userId: req.body.userId})
         for(let index in req.body.dataProducts){

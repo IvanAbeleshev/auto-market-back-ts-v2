@@ -16,7 +16,7 @@ interface IRequestAddOrRemoveProductOfFavorites extends Request{
 export default class FavoritesController{
     public static VIRequestAddOrRemoveProductOfFavorites = {
         body: Joi.object({
-            productId: Joi.number()    
+            productId: Joi.number().required()    
         })
     };
     public static addProductToFavorites = async(req: IRequestAddOrRemoveProductOfFavorites, res: Response) => {

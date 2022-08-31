@@ -3,6 +3,7 @@ import { user } from '../models'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import createAnswer from '../common/createAnswear'
+import { Joi } from 'express-validation'
 
 //======================================
 //interfaces
@@ -27,6 +28,13 @@ const createJWT = (id: number, email: string) =>{
 //======================================
 // class-controller
 export default class UserController{
+    public static VIRequest = {
+        body: Joi.object({
+            email: Joi.string().email().required(),
+            phone: Joi.string(),
+            password: Joi.string().required()
+        })
+    }
 
     public static registration = async(req: IRequest, res: Response) =>{
 

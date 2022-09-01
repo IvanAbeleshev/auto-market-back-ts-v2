@@ -7,7 +7,7 @@ const productRouter = Router()
 
 //get methods
 productRouter.get('/', validate(ProductController.VIRequestGetAll), ProductController.getAll)
-productRouter.get('/mostPopular/', ProductController.getMostPopularProductByTypes)
+productRouter.get('/mostPopular/', validate(ProductController.VIRequestMostPopular), ProductController.getMostPopularProductByTypes)
 productRouter.get('/:id', validate(ProductController.VIRequestGetOne), ProductController.getOne)
 
 //post methods

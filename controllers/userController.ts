@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import createAnswer from '../common/createAnswear'
 import { Joi } from 'express-validation'
+import { role } from '../types/exportsInterfaces'
 
 //======================================
 //interfaces
@@ -17,9 +18,9 @@ interface IRequest extends Request{
 
 //======================================
 // helper function
-const createJWT = (id: number, email: string) =>{
+const createJWT = (id: number, email: string, role: role) =>{
     return jwt.sign(
-        {id, email},
+        {id, email, role},
         process.env.SECRET_KEY,
         {expiresIn: '24h'}
         )
@@ -46,14 +47,14 @@ export default class UserController{
         const hashPassword = bcrypt.hashSync(req.body.password, 10)
         const itemUser = await user.create({email: req.body.email, phone: req.body.phone, password: hashPassword})
 
-        return createAnswer(res, 200, false, 'Create new user. Wellcome', {token: createJWT(itemUser.getDataValue('id'), itemUser.getDataValue('email'))})
+        return createAnswer(res, 200, false, 'Create new user. Wellcome', {token: createJWT(itemUser.getDataValue('id'), itemUser.getDataValue('email'), itemUser.getDataValue('role'))})
 
     }
 
     public static login = async(req: IRequest, res: Response) =>{
         const findedUser = await user.findOne({where:{email: req.body.email}})
         if(findedUser && bcrypt.compareSync(req.body.password, findedUser.getDataValue('password'))){
-            return createAnswer(res, 200, false, 'Wellcome', {token: createJWT(findedUser.getDataValue('id'), req.body.email)})
+            return createAnswer(res, 200, false, 'Wellcome', {token: createJWT(findedUser.getDataValue('id'), req.body.email, findedUser.getDataValue('role'))})
         }
 
         return createAnswer(res, 401, true, 'User is not finded or not exist')

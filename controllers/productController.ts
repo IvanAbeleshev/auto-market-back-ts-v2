@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import {imageProduct, product, remainderProduct} from '../models'
+import {imageProduct, product, remainderProduct, typesProduct} from '../models'
 import {v4} from 'uuid'
 import fileUpload, { UploadedFile } from 'express-fileupload'
 import path from 'path'
@@ -51,6 +51,13 @@ interface IRequestUpdateRemainder extends Request{
 
 interface IRequestUpdateRemainderProduct extends IRequestGetOne{
     body: IDataRemainder
+}
+
+interface IRequestMostPopular extends Request{
+    query:{
+        typesProductId?: string,
+        limit?: string
+    }
 }
 
 //======================================
@@ -134,6 +141,13 @@ export default class ProductController{
             
         })
     }
+
+    public static VIRequestMostPopular = {
+        query: Joi.object({
+            typesProductId: Joi.number(),
+            limit: Joi.number()                
+        })
+    }
     //functions
     public static create = async(req: IRequestCreate, res:Response) =>{
         
@@ -191,22 +205,99 @@ export default class ProductController{
         return createAnswer(res, 200, false, 'Remainder product is update')
     }
 
-    public static getMostPopularProductByTypes = async(_:Request, res:Response) => {
-        //temp query
-        const query=`
-        SELECT 
-            "orderProducts"."id",
-            "orderProducts"."count" as countProduct,
-            "orderProducts"."sum" as sumProduct,
-            "orderProducts"."productId" as productid,
-            "orderProducts"."orderId",
-            "products"."name" as nameProduct,
-            "products"."typesProductId" as idTypes
-        FROM "orderProducts", "products"
-        where "orderProducts"."productId" = "products".id
-        `
-              
-        const [results] = await SequelizeInstance.query(query);
+    public static getMostPopularProductByTypes = async(req:IRequestMostPopular, res:Response) => {
+
+        const limitProductByTypes = Number(req.query.limit) || process.env.DEFAULT_COUNT_PRODUCTS_MOST_POPULAR 
+
+        let results
+        console.log(req.query.typesProductId)
+        if(req.query.typesProductId){
+            results = await typesProduct.findAll({where:{id: req.query.typesProductId}})
+        }else{
+            results = await typesProduct.findAll()
+        }
+
+        console.log(results)
+        //create new query text for result data
+        //maybe need restrict data on period
+        let queryText = ``
+        for(let index in results){
+            const currentId = results[index].getDataValue('id')
+            if(Number(index)!==0){
+                queryText += `
+                union all
+                `
+            }
+            queryText +=`
+            select *
+            From(
+                select
+                    "count",
+                    "id",
+                    "guid",
+                    "name",
+                    "fullName",
+                    "actualPrice",
+                    "oldPrice",
+                    "mainNameImg",
+                    "typesProductId"
+                From(
+                    select  
+                        sum("orderProducts"."count") as "count",
+                        "products"."id" as "id",
+                        "products"."guid" as "guid",
+                        "products"."name" as "name",
+                        "products"."fullName" as "fullName",
+                        "products"."actualPrice" as "actualPrice",
+                        "products"."oldPrice" as "oldPrice",
+                        "products"."mainNameImg" as "mainNameImg",
+                        "products"."typesProductId" as "typesProductId"
+                    from "orderProducts", "products" 
+                    where 
+                        "orderProducts"."productId" = "products"."id" 
+                        and "products"."typesProductId" = ${currentId}
+                    group by
+                        "products"."id",
+                        "products"."guid",
+                        "products"."name",
+                        "products"."fullName",
+                        "products"."actualPrice",
+                        "products"."oldPrice",
+                        "products"."mainNameImg",
+                        "products"."typesProductId"
+
+                    union all
+
+                    select  
+                        1,
+                        "products"."id",
+                        "products"."guid",
+                        "products"."name",
+                        "products"."fullName",
+                        "products"."actualPrice",
+                        "products"."oldPrice",
+                        "products"."mainNameImg",
+                        "products"."typesProductId"
+                    from "products" 
+                    where 
+                        "products"."typesProductId" = ${currentId}
+                    group by
+                        "products"."id",
+                        "products"."guid",
+                        "products"."name",
+                        "products"."fullName",
+                        "products"."actualPrice",
+                        "products"."oldPrice",
+                        "products"."mainNameImg",
+                        "products"."typesProductId"
+                ) "dataProducts"
+                order by "count" desc
+                limit ${limitProductByTypes}
+            ) "typeGroup"
+            `
+        }
+             
+        [results] = await SequelizeInstance.query(queryText);
         
         return createAnswer(res, 200, false, 'Take most popular product list', results)
     }

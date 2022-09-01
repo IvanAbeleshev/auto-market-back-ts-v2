@@ -18,7 +18,7 @@ export const checkRole = (req: Request , res: Response, next: NextFunction) =>{
         return createAnswer(res, 401, true, 'Invalid Token')
     }
 
-    if(req.user.role==='admin'){
+    if(req.user.role!=='admin'){
         return createAnswer(res, 403, true, 'You have no admin permit')
     }
         

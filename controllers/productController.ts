@@ -6,6 +6,7 @@ import path from 'path'
 import { SequelizeInstance } from '../db'
 import createAnswer from '../common/createAnswear'
 import { Joi } from 'express-validation'
+import { writeFileSync } from 'fs'
 
 //======================================
 //interfaces
@@ -25,9 +26,12 @@ interface IRequestGetOne extends Request{
 
 interface IProduct{
     id?: number,
-    typesProductId: number,
+    typesProductId?: number,
+    typesProductGuid?: number,
     guid: string,
     name: string,
+    article?: string,
+    description?: string,
     fullName?: string,
     actualPrice: number,
     oldPrice?: number,
@@ -102,16 +106,19 @@ export default class ProductController{
 
     public static VIRequestGetOne = {
         params: Joi.object({
-            id: Joi.number().required()
+            id: [Joi.string().required(), Joi.number().required()]
         })
     }
 
     public static VIRequestCreate = {
         body: Joi.object({
             id: Joi.number(),
-            typesProductId: Joi.number().required(),
+            typesProductId: Joi.number(),
+            typesProductGuid: Joi.string(),
             guid: Joi.string().required(),
             name: Joi.string().required(),
+            article: Joi.string(),
+            description: Joi.string(),
             fullName: Joi.string(),
             actualPrice: Joi.number().required(),
             oldPrice: Joi.number(),
@@ -153,8 +160,27 @@ export default class ProductController{
         
         const arrayFilesName = renameAndMoveFileImg(req.files)
 
-        //create product
+        if(!req.body.typesProductId){
+            //we can search types by guid
+            const findedByGuid = await typesProduct.findOne({where: {guid: req.body.typesProductGuid}})       
+            req.body.typesProductId = findedByGuid?.getDataValue('id')
+        }
         const productObject: IProduct = req.body
+        
+        const objectForSearch: {id?: number, guid?: string} = {}
+        if(req.body.id){
+            objectForSearch.id = req.body.id
+        }else if(req.body.guid){
+            objectForSearch.guid = req.body.guid    
+        }
+
+        const previousValueItem = await product.findOne({where: objectForSearch})
+        if(previousValueItem){
+            //update record
+            await product.update({...productObject}, {where: objectForSearch})
+            addImgsNameToDbTable(arrayFilesName, previousValueItem.getDataValue('id'))
+            return createAnswer(res, 200, false, 'Product updated in base', {...previousValueItem, imgNames: arrayFilesName})
+        }
         const itemProduct = await product.create({...productObject})
 
         //add img to table
@@ -184,10 +210,28 @@ export default class ProductController{
         return createAnswer(res, 200, false, `Take data product with id: ${req.params.id}`, <Object>item)
     }
 
-    public static addImg = (req: IRequestGetOne, res: Response)=>{
-        const arrayFilesName = renameAndMoveFileImg(req.files)
-        addImgsNameToDbTable(arrayFilesName, Number(req.params.id))
+    public static addImg = async(req: IRequestGetOne, res: Response)=>{
 
+        if(!req.files){
+            return createAnswer(res, 200, false, `image is not receive`)    
+        }
+        let idElement = req.params.id
+        let itemByGuid = await product.findOne({where:{guid: req.params.id}})
+        if (itemByGuid){
+            idElement = itemByGuid.getDataValue('id')
+        }else{
+            if(typeof req.params.id === "string")
+            {
+                return createAnswer(res, 200, true, `id element is not finded`) 
+            }
+            
+            itemByGuid = await product.findOne({where:{id: req.params.id}})
+        }
+        
+        const arrayFilesName = renameAndMoveFileImg(req.files)
+        addImgsNameToDbTable(arrayFilesName, Number(idElement))
+        
+        itemByGuid?.update({mainNameImg: arrayFilesName[0]})
         return createAnswer(res, 200, false, `Images added to product with id: ${req.params.id}`, arrayFilesName)
     }
 

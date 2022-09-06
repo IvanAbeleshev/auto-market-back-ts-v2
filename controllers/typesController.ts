@@ -21,7 +21,7 @@ export default class TypesProductController{
     public static create = async(req: IRequestCreate, res: Response) =>{
         const possibleResult = await typesProduct.findOne({where:{guid: req.body.guid}})
         if(possibleResult){
-            const updatedItem = await typesProduct.update({...req.body}, {where: {...req.body}})
+            await typesProduct.update({...req.body}, {where: {...req.body}})
             return createAnswer(res, 200, false, 'data is updated', possibleResult)    
         }
         const itemTypes = await typesProduct.create({...req.body})

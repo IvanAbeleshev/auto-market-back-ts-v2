@@ -109,16 +109,26 @@ const product = SequelizeInstance.define('product',{
         type: DataType.STRING,
         allowNull: true,
     },
+    description:{
+        type: DataType.STRING,
+        allowNull: true,
+    },
+    atricle:{
+        type: DataType.STRING,
+        allowNull: true,
+    },
     actualPrice: {
         type: DataType.FLOAT
     },
     oldPrice: {
         type: DataType.FLOAT,
-        defaultValue: 0
+        defaultValue: 0,
+        allowNull: true
     },
     mainNameImg:{
         type: DataType.STRING,
-        defaultValue: ''
+        defaultValue: '',
+        allowNull: true
     }
 
 })

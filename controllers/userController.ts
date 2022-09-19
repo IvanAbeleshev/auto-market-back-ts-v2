@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import createAnswer from '../common/createAnswear'
 import { Joi } from 'express-validation'
-import { role } from '../types/exportsInterfaces'
+import { myJwtPayload, role } from '../types/exportsInterfaces'
 
 //======================================
 //interfaces
@@ -16,6 +16,10 @@ interface IRequest extends Request{
     }
 }
 
+interface IUserData {
+    user: myJwtPayload,
+    token: string,
+}
 //======================================
 // helper function
 const createJWT = (id: number, email: string, role: role) =>{
@@ -59,6 +63,18 @@ export default class UserController{
 
         return createAnswer(res, 401, true, 'User is not finded or not exist')
 
+    }
+
+    public static checkUser = async(req: Request, res: Response) =>{
+        if(req.user){
+            const data: IUserData = {
+                user: req.user,
+                token: createJWT(req.user.id, req.body.email, req.user.role?req.user.role: 'user')
+            }
+            return createAnswer(res, 200, false, 'user data', data)        
+        }
+
+        return createAnswer(res, 401, true, 'User is not finded or not exist')    
     }
 
     

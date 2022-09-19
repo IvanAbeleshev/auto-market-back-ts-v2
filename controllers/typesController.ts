@@ -2,7 +2,7 @@ import { typesProduct } from "../models"
 import { Request, Response } from 'express'
 import createAnswer from "../common/createAnswear"
 import { Joi } from "express-validation"
-
+        
 interface IRequestCreate extends Request{
     body:{
         name: string,

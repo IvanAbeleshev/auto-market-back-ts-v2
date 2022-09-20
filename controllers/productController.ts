@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import {imageProduct, product, remainderProduct, typesProduct} from '../models'
+import {favoriteUserProduct, imageProduct, product, remainderProduct, typesProduct} from '../models'
 import {v4} from 'uuid'
 import fileUpload, { UploadedFile } from 'express-fileupload'
 import path from 'path'
@@ -344,6 +344,20 @@ export default class ProductController{
         [results] = await SequelizeInstance.query(queryText);
         
         return createAnswer(res, 200, false, 'Take most popular product list', results)
+    }
+
+    public static getFavorites = async(req: IRequestGetAll, res: Response)=>{
+        if(!req.user){
+            return createAnswer(res, 401, true, 'User is nod defined')
+        }
+
+        favoriteUserProduct.findAndCountAll({where:{userId: req.user.id}})
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 12;
+        const offset = page*limit-limit;
+        const productList = await favoriteUserProduct.findAndCountAll({where:{userId: req.user.id}, limit, offset})
+    
+        return createAnswer(res, 200, false, 'Favorites user', productList)
     }
 }
 

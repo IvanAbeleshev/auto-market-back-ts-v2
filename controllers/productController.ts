@@ -341,7 +341,7 @@ export default class ProductController{
             `
         }
              
-        [results] = await SequelizeInstance.query(queryText);
+        [results] = await SequelizeInstance.query(queryText)
         
         return createAnswer(res, 200, false, 'Take most popular product list', results)
     }
@@ -351,13 +351,13 @@ export default class ProductController{
             return createAnswer(res, 401, true, 'User is nod defined')
         }
 
-        favoriteUserProduct.findAndCountAll({where:{userId: req.user.id}})
-        const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 12;
-        const offset = page*limit-limit;
-        const productList = await favoriteUserProduct.findAndCountAll({where:{userId: req.user.id}, limit, offset})
+        const queryText = `
+        Select * from "products" where "products"."id" in (
+            Select "productId" from "favoriteUserProducts" Where "favoriteUserProducts"."userId"= ${req.user.id} group by id)
+            `
+        const [results] = await SequelizeInstance.query(queryText)
     
-        return createAnswer(res, 200, false, 'Favorites user', productList)
+        return createAnswer(res, 200, false, 'Favorites user', results)
     }
 }
 

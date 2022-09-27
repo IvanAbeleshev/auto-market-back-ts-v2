@@ -43,7 +43,8 @@ interface IRequestCreate extends Request{
 }
 
 interface IDataRemainder{
-    productId: number, 
+    productId?: number, 
+    guid?: string,
     remainder: number
 }
 
@@ -84,8 +85,8 @@ const addImgsNameToDbTable = (arrayNames: string[] | void[], productId:number): 
     }    
 }
 
-const updateOrCreateRemainder = async(productId: number, dataItem:IDataRemainder) =>{
-    const findedElement = await remainderProduct.findOne({where: {productId}})    
+const updateOrCreateRemainder = async(productId: number, dataItem:{productId: number, remainder: number}) =>{
+    const findedElement = await remainderProduct.findOne({where: {productId}})   
     if(findedElement){
         await findedElement.update(dataItem)
     }else{
@@ -131,18 +132,17 @@ export default class ProductController{
             id: Joi.number().required()
         }),
         body: Joi.object({
-            productId: Joi.number().required(), 
+            productId: Joi.number(), 
+            guid: Joi.string(), 
             remainder: Joi.number().required()
         })
     }
 
     public static VIRequestUpdateRemainder = {
-        params: Joi.object({
-            id: Joi.number().required()
-        }),
         body: Joi.object({
             data: Joi.array().items({
-                productId: Joi.number().required(), 
+                productId: Joi.number(), 
+                guid: Joi.string(), 
                 remainder: Joi.number().required()
             })
             
@@ -238,14 +238,30 @@ export default class ProductController{
     public static updateRemainder = async(req: IRequestUpdateRemainder, res: Response) => {
         const incomingArray = req.body.data;
         for(let item in incomingArray){
-            updateOrCreateRemainder(incomingArray[item].productId, incomingArray[item])
+            if(incomingArray[item].productId){
+                updateOrCreateRemainder(Number(incomingArray[item].productId), {productId: Number(incomingArray[item].productId), remainder: incomingArray[item].remainder})
+            }else{
+                const findedElement = await product.findOne({where:{guid: incomingArray[item].guid}})
+                const idElementByGuid = Number(findedElement?.getDataValue('id'))
+                if(idElementByGuid){
+                    updateOrCreateRemainder(idElementByGuid, {productId: idElementByGuid, remainder: incomingArray[item].remainder})
+                }
+            }
         }
         
         return createAnswer(res, 200, false, 'Remainder product is updated')
     }
 
     public static updateRemainderProduct = async(req: IRequestUpdateRemainderProduct, res: Response) =>{
-        updateOrCreateRemainder(Number(req.params.id), {productId: req.body.productId, remainder: req.body.productId})
+        if(req.body.productId){
+            updateOrCreateRemainder(Number(req.params.id), {productId: req.body.productId, remainder: req.body.productId})
+        }else{
+            const findedElement = await product.findOne({where:{guid: req.body.guid}})
+            const idElementByGuid = Number(findedElement?.getDataValue('id'))
+            updateOrCreateRemainder(idElementByGuid, {productId: idElementByGuid, remainder: req.body.remainder})
+        }
+
+        
         return createAnswer(res, 200, false, 'Remainder product is update')
     }
 

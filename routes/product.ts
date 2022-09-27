@@ -14,9 +14,8 @@ productRouter.get('/:id', validate(ProductController.VIRequestGetOne), ProductCo
 
 //post methods
 productRouter.post('/',  [checkRole, validate(ProductController.VIRequestCreate)], ProductController.create)
+productRouter.post('/updateRemainder', [checkRole, validate(ProductController.VIRequestUpdateRemainder)], ProductController.updateRemainder)
 productRouter.post('/:id/addImg', [checkRole, validate(ProductController.VIRequestGetOne)], ProductController.addImg)
 productRouter.post('/:id/updateRemainder', [checkRole, validate(ProductController.VIRequestUpdateRemainderProduct)], ProductController.updateRemainderProduct)
-productRouter.post('/updateRemainder', [checkRole, validate(ProductController.VIRequestUpdateRemainder)], ProductController.updateRemainder)
-
 
 export default productRouter

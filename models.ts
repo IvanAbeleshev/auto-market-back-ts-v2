@@ -110,7 +110,7 @@ const product = SequelizeInstance.define('product',{
         allowNull: true,
     },
     description:{
-        type: DataType.STRING,
+        type: DataType.TEXT,
         allowNull: true,
     },
     atricle:{
